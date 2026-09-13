@@ -14,11 +14,13 @@ export function Header({ onJumpTransparency }: HeaderProps) {
           </span>
           <div>
             <p className="brand__title">Tax Receipt</p>
-            <p className="brand__subtitle">Where your Canadian tax dollars go</p>
+            <p className="brand__subtitle">Where Canadian tax dollars go</p>
           </div>
         </div>
         <div className="site-header__meta">
-          <span className="pill">Ontario · FY {FISCAL_META.fiscalYearLabel}</span>
+          <span className="pill">
+            {FISCAL_META.budgetLabel} · FY {FISCAL_META.fiscalYearLabel}
+          </span>
           <button type="button" className="link-btn" onClick={onJumpTransparency}>
             Sources &amp; method
           </button>

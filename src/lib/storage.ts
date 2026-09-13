@@ -1,38 +1,38 @@
-const STORAGE_KEY = 'tax-receipt:v1';
+/** localStorage for UI prefs only (expanded nodes, jurisdiction focus). */
 
-export interface PersistedInputs {
-  employmentIncome: string;
-  federalTaxOverride: string;
-  ontarioTaxOverride: string;
-  useOverride: boolean;
+const STORAGE_KEY = 'tax-receipt:ui:v2';
+
+export type JurisdictionFocus = 'federal' | 'ontario';
+
+export interface UiPrefs {
+  focus: JurisdictionFocus;
+  expandedIds: string[];
 }
 
-const DEFAULTS: PersistedInputs = {
-  employmentIncome: '',
-  federalTaxOverride: '',
-  ontarioTaxOverride: '',
-  useOverride: false,
+const DEFAULTS: UiPrefs = {
+  focus: 'federal',
+  expandedIds: [],
 };
 
-export function loadInputs(): PersistedInputs {
+export function loadUiPrefs(): UiPrefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
-    const parsed = JSON.parse(raw) as Partial<PersistedInputs>;
-    return {
-      employmentIncome: String(parsed.employmentIncome ?? ''),
-      federalTaxOverride: String(parsed.federalTaxOverride ?? ''),
-      ontarioTaxOverride: String(parsed.ontarioTaxOverride ?? ''),
-      useOverride: Boolean(parsed.useOverride),
-    };
+    if (!raw) return { ...DEFAULTS, expandedIds: [] };
+    const parsed = JSON.parse(raw) as Partial<UiPrefs>;
+    const focus: JurisdictionFocus =
+      parsed.focus === 'ontario' ? 'ontario' : 'federal';
+    const expandedIds = Array.isArray(parsed.expandedIds)
+      ? parsed.expandedIds.filter((id): id is string => typeof id === 'string')
+      : [];
+    return { focus, expandedIds };
   } catch {
-    return { ...DEFAULTS };
+    return { ...DEFAULTS, expandedIds: [] };
   }
 }
 
-export function saveInputs(inputs: PersistedInputs): void {
+export function saveUiPrefs(prefs: UiPrefs): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
     // Ignore quota / private-mode failures.
   }

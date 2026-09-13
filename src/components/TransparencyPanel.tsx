@@ -1,65 +1,58 @@
-import { FISCAL_META } from '../data/fiscalMeta';
 import {
-  FEDERAL_BPA_2025,
-  ONTARIO_BPA_2025,
-  TAX_YEAR_LABEL,
-} from '../data/taxBrackets';
-import { formatDateISO } from '../lib/format';
+  FEDERAL_TOTAL_EXPENSE_BILLIONS,
+  FISCAL_META,
+  ONTARIO_TOTAL_EXPENSE_BILLIONS,
+} from '../data/fiscalMeta';
+import { formatBillions, formatDateISO } from '../lib/format';
 
 export function TransparencyPanel() {
   return (
-    <section
-      id="transparency"
-      className="card transparency"
-      aria-labelledby="transparency-heading"
-    >
-      <h2 id="transparency-heading">Transparency</h2>
+    <section className="panel panel--transparency" aria-labelledby="transparency-heading">
+      <div className="panel__head">
+        <h2 id="transparency-heading">Transparency</h2>
+        <p className="panel__lede">
+          Methodology, fiscal year, sources, and disclaimer. Every number is an
+          estimate or Budget published figure — not a personal CRA allocation.
+        </p>
+      </div>
 
-      <dl className="meta-list">
+      <dl className="meta-grid">
         <div>
           <dt>Fiscal year</dt>
-          <dd>{FISCAL_META.fiscalYearLabel}</dd>
-        </div>
-        <div>
-          <dt>Tax year used for brackets</dt>
-          <dd>{TAX_YEAR_LABEL}</dd>
-        </div>
-        <div>
-          <dt>Province</dt>
-          <dd>{FISCAL_META.province}</dd>
+          <dd>
+            {FISCAL_META.budgetLabel} / FY {FISCAL_META.fiscalYearLabel}
+          </dd>
         </div>
         <div>
           <dt>Last reviewed</dt>
           <dd>{formatDateISO(FISCAL_META.lastReviewed)}</dd>
         </div>
+        <div>
+          <dt>Federal expense denominator</dt>
+          <dd>
+            {formatBillions(FEDERAL_TOTAL_EXPENSE_BILLIONS)} (excl. net actuarial
+            losses)
+          </dd>
+        </div>
+        <div>
+          <dt>Ontario expense denominator</dt>
+          <dd>{formatBillions(ONTARIO_TOTAL_EXPENSE_BILLIONS)} total expense</dd>
+        </div>
+        <div>
+          <dt>Province focus</dt>
+          <dd>{FISCAL_META.province}</dd>
+        </div>
       </dl>
 
-      <h3>Methodology (plain English)</h3>
+      <h3>Methodology</h3>
       <p>{FISCAL_META.methodologySummary}</p>
-      <ul className="plain-list">
-        <li>
-          Federal basic personal amount modeled at {FEDERAL_BPA_2025.toLocaleString('en-CA')}{' '}
-          CAD × 14.5% credit rate.
-        </li>
-        <li>
-          Ontario basic personal amount modeled at {ONTARIO_BPA_2025.toLocaleString('en-CA')}{' '}
-          CAD × 5.05% credit rate (Ontario surtax not modeled).
-        </li>
-        <li>
-          Your $ for a category = (your tax for that government) × (category’s share of that
-          government’s total expenses).
-        </li>
-        <li>
-          Program totals ($B) are the Budget figures for that category in {FISCAL_META.fiscalYearLabel}.
-        </li>
-      </ul>
 
       <h3>Sources</h3>
       <ul className="source-list">
-        {FISCAL_META.sources.map((source) => (
-          <li key={source.url}>
-            <a href={source.url} target="_blank" rel="noopener noreferrer">
-              {source.label}
+        {FISCAL_META.sources.map((s) => (
+          <li key={s.url}>
+            <a href={s.url} target="_blank" rel="noopener noreferrer">
+              {s.label}
             </a>
           </li>
         ))}

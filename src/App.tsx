@@ -1,56 +1,53 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from './components/Header';
-import { Landing } from './components/Landing';
-import { IncomeForm } from './components/IncomeForm';
-import { Receipt } from './components/Receipt';
+import { CoffersPanel } from './components/CoffersPanel';
+import { AverageEarnerPanel } from './components/AverageEarnerPanel';
+import { SpendingTree } from './components/SpendingTree';
 import { TransparencyPanel } from './components/TransparencyPanel';
-import { estimateTaxes } from './lib/taxCalc';
-import { loadInputs, saveInputs } from './lib/storage';
+import {
+  AVERAGE_EARNER,
+  FEDERAL_COFFERS,
+  ONTARIO_COFFERS,
+} from './data/fiscalMeta';
+import { FEDERAL_SPENDING_TREE } from './data/federalSpending';
+import { ONTARIO_SPENDING_TREE } from './data/ontarioSpending';
+import {
+  loadUiPrefs,
+  saveUiPrefs,
+  type JurisdictionFocus,
+} from './lib/storage';
+import { collectExpandableIds } from './lib/tree';
 import './index.css';
 
-function parseMoney(value: string): number {
-  const n = Number(value.replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
-
 export default function App() {
-  const initial = loadInputs();
-  const [employmentIncome, setEmploymentIncome] = useState(initial.employmentIncome);
-  const [useOverride, setUseOverride] = useState(initial.useOverride);
-  const [federalTaxOverride, setFederalTaxOverride] = useState(initial.federalTaxOverride);
-  const [ontarioTaxOverride, setOntarioTaxOverride] = useState(initial.ontarioTaxOverride);
-  const [showReceipt, setShowReceipt] = useState(
-    Boolean(initial.employmentIncome) ||
-      (initial.useOverride &&
-        Boolean(initial.federalTaxOverride) &&
-        Boolean(initial.ontarioTaxOverride)),
+  const initial = loadUiPrefs();
+  const [focus, setFocus] = useState<JurisdictionFocus>(initial.focus);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set(initial.expandedIds),
   );
-  const receiptRef = useRef<HTMLDivElement>(null);
   const transparencyRef = useRef<HTMLDivElement>(null);
 
+  const tree = focus === 'federal' ? FEDERAL_SPENDING_TREE : ONTARIO_SPENDING_TREE;
+  const averageTax =
+    focus === 'federal'
+      ? AVERAGE_EARNER.federalTaxApprox
+      : AVERAGE_EARNER.ontarioTaxApprox;
+
+  const expandableIds = useMemo(() => collectExpandableIds(tree), [tree]);
+
   useEffect(() => {
-    saveInputs({
-      employmentIncome,
-      federalTaxOverride,
-      ontarioTaxOverride,
-      useOverride,
+    saveUiPrefs({
+      focus,
+      expandedIds: Array.from(expandedIds),
     });
-  }, [employmentIncome, federalTaxOverride, ontarioTaxOverride, useOverride]);
+  }, [focus, expandedIds]);
 
-  const estimate = useMemo(
-    () =>
-      estimateTaxes({
-        employmentIncome: parseMoney(employmentIncome),
-        federalTaxOverride: useOverride ? parseMoney(federalTaxOverride) : null,
-        ontarioTaxOverride: useOverride ? parseMoney(ontarioTaxOverride) : null,
-      }),
-    [employmentIncome, useOverride, federalTaxOverride, ontarioTaxOverride],
-  );
-
-  const handleSubmit = () => {
-    setShowReceipt(true);
-    requestAnimationFrame(() => {
-      receiptRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const handleToggle = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   };
 
@@ -62,29 +59,42 @@ export default function App() {
     <div className="app">
       <Header onJumpTransparency={jumpTransparency} />
       <main className="main">
-        <Landing />
-        <IncomeForm
-          employmentIncome={employmentIncome}
-          useOverride={useOverride}
-          federalTaxOverride={federalTaxOverride}
-          ontarioTaxOverride={ontarioTaxOverride}
-          onEmploymentIncome={setEmploymentIncome}
-          onUseOverride={setUseOverride}
-          onFederalOverride={setFederalTaxOverride}
-          onOntarioOverride={setOntarioTaxOverride}
-          onSubmit={handleSubmit}
+        <section className="hero">
+          <h1>Where Canadian tax dollars go</h1>
+          <p>
+            A transparency explorer for <strong>Budget 2025 / FY 2025–26</strong>.
+            See national coffers, an Ontario average-earner snapshot, and a
+            tap-to-expand spending tree — with no personal income forms.
+          </p>
+        </section>
+
+        <CoffersPanel federal={FEDERAL_COFFERS} ontario={ONTARIO_COFFERS} />
+
+        <AverageEarnerPanel
+          earner={AVERAGE_EARNER}
+          focus={focus}
+          topCategories={tree}
         />
-        {showReceipt && (
-          <div ref={receiptRef}>
-            <Receipt estimate={estimate} />
-          </div>
-        )}
+
+        <SpendingTree
+          focus={focus}
+          onFocusChange={setFocus}
+          nodes={tree}
+          averageTax={averageTax}
+          expandedIds={expandedIds}
+          onToggle={handleToggle}
+          onExpandAll={() => setExpandedIds(new Set(expandableIds))}
+          onCollapseAll={() => setExpandedIds(new Set())}
+        />
+
         <div ref={transparencyRef}>
           <TransparencyPanel />
         </div>
       </main>
       <footer className="site-footer">
-        <p>Tax Receipt · personal transparency tool for Ontario · not affiliated with any government</p>
+        <p>
+          Tax Receipt · transparency explorer · not affiliated with any government
+        </p>
       </footer>
     </div>
   );

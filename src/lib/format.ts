@@ -11,16 +11,9 @@ export function formatCAD(amount: number, opts?: { cents?: boolean }): string {
   }).format(amount);
 }
 
-export function formatCADCompact(amount: number): string {
-  if (Math.abs(amount) >= 1_000_000) {
-    return formatCAD(amount, { cents: false });
-  }
-  return formatCAD(amount);
-}
-
 export function formatBillions(billions: number): string {
   const formatted = new Intl.NumberFormat('en-CA', {
-    maximumFractionDigits: billions >= 10 ? 1 : 1,
+    maximumFractionDigits: 1,
     minimumFractionDigits: 1,
   }).format(billions);
   return `$${formatted}B`;
