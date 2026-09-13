@@ -6,6 +6,12 @@ A Canadian tax-dollars **transparency explorer** focused on Ontario. Explore fed
 
 Built with **Vite 5 + React 18 + TypeScript 5** and plain CSS. Static cited data only — no APIs.
 
+## Live (GitHub Pages)
+
+https://davidd647.github.io/tax_receipt/
+
+Deploys automatically from `main` via GitHub Actions.
+
 ## Run locally
 
 ```bash
